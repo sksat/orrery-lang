@@ -3,6 +3,16 @@
 #include <string>
 #include <string_view>
 
+enum class token_type {
+	digit,
+	unknown,
+};
+
+struct token_t {
+	std::string_view s;
+	token_type t;
+};
+
 void tokenize(std::string_view src);
 
 int main(int argc, char **argv){
@@ -57,6 +67,30 @@ void tokenize(std::string_view src){
 			//src.remove_prefix(tsiz+skip);
 			push_token(src, tsiz);
 			src.remove_prefix(skip);
+			break;
+		case '/':
+			push_token(src, tsiz);
+			if(src[tsiz+1] == '/'){ // 1行コメント
+				for(skip=2; (tsiz+skip) < src.size(); skip++){
+					if(src[tsiz+skip] == '\n') break;
+				}
+				tsiz += skip;
+				src.remove_prefix(tsiz);
+				tsiz=0;
+				break;
+			}else if(src[tsiz+1] == '*'){ // 複数行コメント
+				for(skip=2; (tsiz+skip) < src.size(); skip++){
+					if(src[tsiz+skip-1] == '*'){
+						if(src[tsiz+skip] == '/') break;
+					}
+				}
+				tsiz += skip + 1;
+				src.remove_prefix(tsiz);
+				tsiz=0;
+				break;
+			}
+			tsiz++;
+			push_token(src, tsiz);
 			break;
 		// 文字列
 		case '\'':
