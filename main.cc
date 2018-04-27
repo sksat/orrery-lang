@@ -103,15 +103,53 @@ void tokenize(std::string_view src){
 				push_token(src, comsiz);
 			}
 			break;
-		// 矢印
-		case '-': // ->
-		case '=': // =>
+		// 色々な演算子
+		case '-':
+		case '=':
 			push_token(src, tsiz);
 			tsiz++;
-			if(src[tsiz]=='>') tsiz++;
+			if(src[tsiz]=='>' ||		// ->,=>
+				src[tsiz-1]==src[tsiz])	// --,==
+				tsiz++;
+			push_token(src, tsiz);
+			break;
+		case '+':
+		case '&':
+		case '|':
+			push_token(src, tsiz);
+			tsiz++;
+			if(src[tsiz]==src[tsiz+1] || // ++,&&,||
+				src[tsiz]=='=') // +=,&=,|=
+				tsiz++;
+			push_token(src, tsiz);
+			break;
+		case '*':
+		case '%':
+		case '!':
+		case '^':
+			push_token(src, tsiz);
+			tsiz++;
+			if(src[tsiz]=='=') tsiz++; // *=,%=,!=,^=
+			push_token(src, tsiz);
+			break;
+		case ':':
+			push_token(src, tsiz);
+			tsiz++;
+			if(src[tsiz]==':') tsiz++; // ::
+			push_token(src, tsiz);
+			break;
+		// シフトとか
+		case '<':
+		case '>':
+			push_token(src, tsiz);
+			tsiz++;
+			if(src[tsiz-1]==src[tsiz]) tsiz++; // <<,>>
+			if(src[tsiz]=='=') tsiz++; // <=,>=,<<=,>>=
 			push_token(src, tsiz);
 			break;
 		// 確実に1文字で区切れるやつ
+		case '~':
+		case '?':
 		case ';':
 		case ',':
 		case '(': case ')':
