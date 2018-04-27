@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include <string>
 #include <string_view>
 
@@ -13,11 +14,12 @@ struct token_t {
 	token_type t;
 };
 
-void tokenize(std::string_view src);
+void tokenize(std::vector<token_t> &toks, std::string_view src);
 
 int main(int argc, char **argv){
 	std::ifstream file;
 	std::string src;
+	std::vector<token_t> tokens;
 
 	if(argc>1) file = std::ifstream(argv[1]);
 
@@ -34,29 +36,48 @@ int main(int argc, char **argv){
 		src += line + '\n';
 	}
 
-	tokenize(src);
+	std::cout << "src:"<<std::endl
+		<< src
+		<< std::endl;
+
+	tokenize(tokens, src);
+
+	{
+		size_t scope = 0;
+		bool newline = false;
+		for(auto &t : tokens){
+			if(t.s == ";") newline=true;
+			else if(t.s == "{"){newline=true; scope++;}
+			else if(t.s == "}"){newline=true; scope--;}
+			else std::cout<<"["<<t.s<<"] ";
+			if(newline){
+				if(t.s=="}") std::cout<<"\b\b\b\b";
+				std::cout<<t.s<<std::endl;
+				for(size_t i=0;i<scope;i++) std::cout<<"    ";
+				newline=false;
+			}
+		}
+		std::cout<<std::endl;
+	}
 }
 
-void push_token(std::string_view &src, size_t &tsiz){
-	auto token = src.substr(0,tsiz);
-	if(token.empty()) return;
-	std::cout<<"["<<token<<"] ";
+void push_token(std::vector<token_t> &tokens, std::string_view &src, size_t &tsiz, token_type t=token_type::unknown){
+	auto str = src.substr(0,tsiz);
+	if(str.empty()) return;
+	token_t token;
+	token.s = str;
+	token.t = t;
+	tokens.push_back(token);
 	src.remove_prefix(tsiz);
 	tsiz = 0;
 }
 
-void tokenize(std::string_view src){
-	std::cout << "[" << src << "]" << std::endl;
-
+void tokenize(std::vector<token_t> &toks, std::string_view src){
 	size_t tsiz = 0; // トークンの文字数
 	size_t skip;
 	while(true){
 		if(src.empty()) break;
 		if(src.size() < tsiz) break;
-		if(src.size() == tsiz){
-			std::cout<<"["<<src<<"]"<<std::endl;
-			break;
-		}
 
 		switch(src[tsiz]){
 		// 空白
@@ -68,13 +89,11 @@ void tokenize(std::string_view src){
 					src[tsiz+skip] != '\t' &&
 					src[tsiz+skip] != '\n') break;
 			}
-			//std::cout<<"["<<src.substr(0, tsiz)<<"] ";
-			//src.remove_prefix(tsiz+skip);
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			src.remove_prefix(skip);
 			break;
 		case '/':
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			if(src[tsiz+1] == '/'){ // 1行コメント
 				for(skip=2; (tsiz+skip) < src.size(); skip++){
 					if(src[tsiz+skip] == '\n') break;
@@ -95,62 +114,62 @@ void tokenize(std::string_view src){
 				break;
 			}
 			tsiz++;
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			break;
 		// 文字列
 		case '\'':
 		case '\"':
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			{
 				auto comsiz = src.find(src[tsiz], 1);
 				if(comsiz == std::string_view::npos) abort();
 				comsiz++;
-				push_token(src, comsiz);
+				push_token(toks, src, comsiz);
 			}
 			break;
 		// 色々な演算子
 		case '-':
 		case '=':
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			tsiz++;
 			if(src[tsiz]=='>' ||		// ->,=>
 				src[tsiz-1]==src[tsiz])	// --,==
 				tsiz++;
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			break;
 		case '+':
 		case '&':
 		case '|':
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			tsiz++;
 			if(src[tsiz]==src[tsiz+1] || // ++,&&,||
 				src[tsiz]=='=') // +=,&=,|=
 				tsiz++;
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			break;
 		case '*':
 		case '%':
 		case '!':
 		case '^':
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			tsiz++;
 			if(src[tsiz]=='=') tsiz++; // *=,%=,!=,^=
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			break;
 		case ':':
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			tsiz++;
 			if(src[tsiz]==':') tsiz++; // ::
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			break;
 		// シフトとか
 		case '<':
 		case '>':
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			tsiz++;
 			if(src[tsiz-1]==src[tsiz]) tsiz++; // <<,>>
 			if(src[tsiz]=='=') tsiz++; // <=,>=,<<=,>>=
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			break;
 		// 確実に1文字で区切れるやつ
 		case '~':
@@ -160,9 +179,9 @@ void tokenize(std::string_view src){
 		case '(': case ')':
 		case '{': case '}':
 		case '[': case ']':
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			tsiz++;
-			push_token(src, tsiz);
+			push_token(toks, src, tsiz);
 			break;
 		default:
 			tsiz++;
