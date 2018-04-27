@@ -7,6 +7,8 @@
 
 void print_tokens(const token::toklst_t &tokens);
 
+void parse(const token::toklst_t &tokens, size_t pos=0);
+
 int main(int argc, char **argv){
 	std::ifstream file;
 	std::string src;
@@ -38,6 +40,8 @@ int main(int argc, char **argv){
 
 	token::tokenize(tokens, src);
 	print_tokens(tokens);
+
+	parse(tokens);
 }
 
 void print_tokens(const token::toklst_t &tokens){
@@ -61,4 +65,51 @@ void print_tokens(const token::toklst_t &tokens){
 		}
 	}
 	std::cout<<std::endl;
+}
+
+void parse(const token::toklst_t &tokens, size_t pos){
+	auto read = tokens.begin() + pos;
+	auto it = read;
+
+	if(pos == 0) std::cout<<"parse:"<<std::endl;
+
+	while(true){
+		if(it->s == ";"){
+			std::cout<<"expr(";
+			while(read<it){
+				std::cout<<"["<<read->s<<"] ";
+				read++;
+			}
+			read++;
+			std::cout<<");"<<std::endl;
+		}else if(it->s == "{"){
+			std::cout<<"statement:"<<std::endl<<"\t";
+
+			// [ここの部分] {}
+			// if(true)とか
+			while(read<it){
+				std::cout<<"["<<read->s<<"] ";
+				read++;
+			}
+			it++; // ブロックの中身の最初
+			read = it;
+			std::cout<<std::endl<<"\t";
+			size_t block_scope=0;
+			while(true){
+				if(it->s=="{"){
+					block_scope++;
+				}else if(it->s=="}"){
+					if(block_scope==0) break;
+					block_scope--;
+				}
+				std::cout<<"["<<it->s<<"] ";
+				it++;
+			}
+			it++;
+			read = it;
+			std::cout<<std::endl;
+		}
+		if(it != tokens.end()) it++;
+		else break;
+	}
 }
