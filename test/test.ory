@@ -1,0 +1,15 @@
+import std::io; // import stdlib
+
+1+2+3*4*5+7*8/9&10; // expr
+
+/* function */
+fn hoge(){}
+
+// main func
+fn main(int argc, char **argv){
+	std::println("Hello, World!");
+	if(true){
+		hoge();
+	}
+	return 0;
+}

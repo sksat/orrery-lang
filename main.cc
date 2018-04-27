@@ -12,6 +12,11 @@ int main(int argc, char **argv){
 
 	if(argc>1) file = std::ifstream(argv[1]);
 
+	if(!file){
+		std::cerr<<"cannot open file: \""<<argv[1]<<"\""<<std::endl;
+		return -1;
+	}
+
 	while(true){ // 流れてきた文字列ぜんぶ読む
 		std::string line;
 		if(argc < 2){
@@ -39,9 +44,10 @@ int main(int argc, char **argv){
 			else if(t.s == "{"){newline=true; scope++;}
 			else if(t.s == "}"){newline=true; scope--;}
 			else{
-				if(t.s == "(" || t.s ==")") std::cout<<t.s;
-				else if(t.t != token::type::opr)
+				if(t.t != token::type::opr)
 					std::cout<<"["<<t.s<<"] ";
+				else
+					std::cout<<t.s<<" ";
 			}
 			if(newline){
 				if(t.s=="}") std::cout<<"\b\b\b\b";
