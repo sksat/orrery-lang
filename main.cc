@@ -5,6 +5,8 @@
 #include <string_view>
 #include "token.hpp"
 
+void print_tokens(const token::toklst_t &tokens);
+
 int main(int argc, char **argv){
 	std::ifstream file;
 	std::string src;
@@ -35,27 +37,28 @@ int main(int argc, char **argv){
 		<< std::endl;
 
 	token::tokenize(tokens, src);
+	print_tokens(tokens);
+}
 
-	{
-		size_t scope = 0;
-		bool newline = false;
-		for(auto &t : tokens){
-			if(t.s == ";") newline=true;
-			else if(t.s == "{"){newline=true; scope++;}
-			else if(t.s == "}"){newline=true; scope--;}
-			else{
-				if(t.t != token::type::opr)
-					std::cout<<"["<<t.s<<"] ";
-				else
-					std::cout<<t.s<<" ";
-			}
-			if(newline){
-				if(t.s=="}") std::cout<<"\b\b\b\b";
-				std::cout<<t.s<<std::endl;
-				for(size_t i=0;i<scope;i++) std::cout<<"    ";
-				newline=false;
-			}
+void print_tokens(const token::toklst_t &tokens){
+	size_t scope = 0;
+	bool newline = false;
+	for(auto &t : tokens){
+		if(t.s == ";") newline=true;
+		else if(t.s == "{"){newline=true; scope++;}
+		else if(t.s == "}"){newline=true; scope--;}
+		else{
+			if(t.t != token::type::opr)
+				std::cout<<"["<<t.s<<"] ";
+			else
+				std::cout<<t.s<<" ";
 		}
-		std::cout<<std::endl;
+		if(newline){
+			if(t.s=="}") std::cout<<"\b\b\b\b";
+			std::cout<<t.s<<std::endl;
+			for(size_t i=0;i<scope;i++) std::cout<<"    ";
+			newline=false;
+		}
 	}
+	std::cout<<std::endl;
 }
