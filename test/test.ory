@@ -2,6 +2,10 @@ import std::io; // import stdlib
 
 1+2+3*4*5+7*8/9&10; // expr
 
+if 1<2 {
+	/* if statement */
+}
+
 /* function */
 fn hoge(){}
 
