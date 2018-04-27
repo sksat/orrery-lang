@@ -17,19 +17,24 @@ void tokenize(std::string_view src);
 
 int main(int argc, char **argv){
 	std::ifstream file;
-	std::string line;
+	std::string src;
 
 	if(argc>1) file = std::ifstream(argv[1]);
 
-	// とりあえず1行
-	if(argc < 2){
-		std::cout << "> ";
-		std::getline(std::cin, line);
-	}else{
-		std::getline(file, line);
+	while(true){ // 流れてきた文字列ぜんぶ読む
+		std::string line;
+		if(argc < 2){
+			std::cout << "> ";
+			std::getline(std::cin, line);
+			if(line == "quit") break;
+		}else{
+			std::getline(file, line);
+			if(!file) break;
+		}
+		src += line + '\n';
 	}
 
-	tokenize(line);
+	tokenize(src);
 }
 
 void push_token(std::string_view &src, size_t &tsiz){
