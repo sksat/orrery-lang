@@ -6,6 +6,7 @@
 
 enum class token_type {
 	digit,
+	opr,
 	unknown,
 };
 
@@ -49,7 +50,11 @@ int main(int argc, char **argv){
 			if(t.s == ";") newline=true;
 			else if(t.s == "{"){newline=true; scope++;}
 			else if(t.s == "}"){newline=true; scope--;}
-			else std::cout<<"["<<t.s<<"] ";
+			else{
+				if(t.s == "(" || t.s ==")") std::cout<<t.s;
+				else if(t.t != token_type::opr)
+					std::cout<<"["<<t.s<<"] ";
+			}
 			if(newline){
 				if(t.s=="}") std::cout<<"\b\b\b\b";
 				std::cout<<t.s<<std::endl;
@@ -114,7 +119,7 @@ void tokenize(std::vector<token_t> &toks, std::string_view src){
 				break;
 			}
 			tsiz++;
-			push_token(toks, src, tsiz);
+			push_token(toks, src, tsiz, token_type::opr);
 			break;
 		// 文字列
 		case '\'':
@@ -135,7 +140,7 @@ void tokenize(std::vector<token_t> &toks, std::string_view src){
 			if(src[tsiz]=='>' ||		// ->,=>
 				src[tsiz-1]==src[tsiz])	// --,==
 				tsiz++;
-			push_token(toks, src, tsiz);
+			push_token(toks, src, tsiz, token_type::opr);
 			break;
 		case '+':
 		case '&':
@@ -145,7 +150,7 @@ void tokenize(std::vector<token_t> &toks, std::string_view src){
 			if(src[tsiz]==src[tsiz+1] || // ++,&&,||
 				src[tsiz]=='=') // +=,&=,|=
 				tsiz++;
-			push_token(toks, src, tsiz);
+			push_token(toks, src, tsiz, token_type::opr);
 			break;
 		case '*':
 		case '%':
@@ -154,13 +159,13 @@ void tokenize(std::vector<token_t> &toks, std::string_view src){
 			push_token(toks, src, tsiz);
 			tsiz++;
 			if(src[tsiz]=='=') tsiz++; // *=,%=,!=,^=
-			push_token(toks, src, tsiz);
+			push_token(toks, src, tsiz, token_type::opr);
 			break;
 		case ':':
 			push_token(toks, src, tsiz);
 			tsiz++;
 			if(src[tsiz]==':') tsiz++; // ::
-			push_token(toks, src, tsiz);
+			push_token(toks, src, tsiz, token_type::opr);
 			break;
 		// シフトとか
 		case '<':
@@ -169,7 +174,7 @@ void tokenize(std::vector<token_t> &toks, std::string_view src){
 			tsiz++;
 			if(src[tsiz-1]==src[tsiz]) tsiz++; // <<,>>
 			if(src[tsiz]=='=') tsiz++; // <=,>=,<<=,>>=
-			push_token(toks, src, tsiz);
+			push_token(toks, src, tsiz, token_type::opr);
 			break;
 		// 確実に1文字で区切れるやつ
 		case '~':
