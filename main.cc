@@ -103,6 +103,14 @@ void tokenize(std::string_view src){
 				push_token(src, comsiz);
 			}
 			break;
+		// 矢印
+		case '-': // ->
+		case '=': // =>
+			push_token(src, tsiz);
+			tsiz++;
+			if(src[tsiz]=='>') tsiz++;
+			push_token(src, tsiz);
+			break;
 		// 確実に1文字で区切れるやつ
 		case ';':
 		case ',':
