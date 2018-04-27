@@ -67,6 +67,37 @@ void print_tokens(const token::toklst_t &tokens){
 	std::cout<<std::endl;
 }
 
+struct node_t {
+	using tokitr = token::toklst_t::const_iterator;
+	std::vector<node_t> child;
+};
+
+struct expr_t : node_t {
+	tokitr begin, end;
+};
+
+struct block_t : node_t {
+	struct header_t {
+		tokitr begin, end;
+	};
+	header_t head;
+
+	// ブロックの中身
+	tokitr begin, end;
+};
+
+void print_block(const block_t &blk){
+	std::cout<<"block:"<<std::endl;
+	std::cout<<"\theader:\n\t";
+	for(auto it=blk.head.begin;it<=blk.head.end;it++)
+		std::cout<<"["<<it->s<<"] ";
+	std::cout<<std::endl;
+	std::cout<<"\tmain:\n\t";
+	for(auto it=blk.begin;it<=blk.end;it++)
+		std::cout<<"["<<it->s<<"] ";
+	std::cout<<std::endl;
+}
+
 void parse(const token::toklst_t &tokens, size_t pos){
 	auto read = tokens.begin() + pos;
 	auto it = read;
@@ -83,17 +114,15 @@ void parse(const token::toklst_t &tokens, size_t pos){
 			read++;
 			std::cout<<");"<<std::endl;
 		}else if(it->s == "{"){
-			std::cout<<"statement:"<<std::endl<<"\t";
+			block_t blk;
 
 			// [ここの部分] {}
 			// if(true)とか
-			while(read<it){
-				std::cout<<"["<<read->s<<"] ";
-				read++;
-			}
+			blk.head.begin	= read;
+			blk.head.end	= it-1;
 			it++; // ブロックの中身の最初
-			read = it;
-			std::cout<<std::endl<<"\t";
+			blk.begin = read = it;
+
 			size_t block_scope=0;
 			while(true){
 				if(it->s=="{"){
@@ -102,9 +131,13 @@ void parse(const token::toklst_t &tokens, size_t pos){
 					if(block_scope==0) break;
 					block_scope--;
 				}
-				std::cout<<"["<<it->s<<"] ";
+			//	std::cout<<"["<<it->s<<"] ";
 				it++;
 			}
+			blk.end = it-1;
+
+			print_block(blk);
+
 			it++;
 			read = it;
 			std::cout<<std::endl;
