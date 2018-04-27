@@ -88,12 +88,15 @@ struct block_t : node_t {
 
 void print_block(const block_t &blk){
 	std::cout<<"block:"<<std::endl;
-	std::cout<<"\theader:\n\t";
-	for(auto it=blk.head.begin;it<=blk.head.end;it++)
+	std::cout<<"\theader: ";
+	auto& head = blk.head;
+	if(head.begin == head.end) std::cout<<"empty";
+	for(auto it=head.begin;it<head.end;it++)
 		std::cout<<"["<<it->s<<"] ";
 	std::cout<<std::endl;
-	std::cout<<"\tmain:\n\t";
-	for(auto it=blk.begin;it<=blk.end;it++)
+	std::cout<<"\tmain: ";
+	if(blk.begin == blk.end) std::cout<<"empty";
+	for(auto it=blk.begin;it<blk.end;it++)
 		std::cout<<"["<<it->s<<"] ";
 	std::cout<<std::endl;
 }
@@ -105,44 +108,49 @@ void parse(const token::toklst_t &tokens, size_t pos){
 	if(pos == 0) std::cout<<"parse:"<<std::endl;
 
 	while(true){
-		if(it->s == ";"){
-			std::cout<<"expr(";
-			while(read<it){
-				std::cout<<"["<<read->s<<"] ";
-				read++;
-			}
-			read++;
-			std::cout<<");"<<std::endl;
-		}else if(it->s == "{"){
+		if(it->s == "fn" || it->s == "if" || it->s == "for"){
 			block_t blk;
-
-			// [ここの部分] {}
-			// if(true)とか
-			blk.head.begin	= read;
-			blk.head.end	= it-1;
-			it++; // ブロックの中身の最初
-			blk.begin = read = it;
-
-			size_t block_scope=0;
+			std::cout<<"statement "<<it->s<<":"<<std::endl;
+			it++;
+			blk.head.begin = it;
 			while(true){
-				if(it->s=="{"){
-					block_scope++;
-				}else if(it->s=="}"){
-					if(block_scope==0) break;
-					block_scope--;
-				}
-			//	std::cout<<"["<<it->s<<"] ";
+				if(it->s == "{") break;
 				it++;
 			}
-			blk.end = it-1;
+			blk.head.end = it;
+			it++;
+			blk.begin = it;
+
+			size_t block_scope = 0;
+			while(true){
+				if(it->s == "{") block_scope++;
+				if(it->s == "}"){
+					if(block_scope == 0) break;
+					block_scope--;
+				}
+				it++;
+			}
+			blk.end = it;
 
 			print_block(blk);
+		}else{
+			expr_t expr;
+			expr.begin = it;
+			while(true){
+				if(it->s == ";") break;
+				it++;
+			}
+			expr.end = it;
 
-			it++;
-			read = it;
-			std::cout<<std::endl;
+			auto it2 = expr.begin;
+			std::cout<<"expr(";
+			while(it2<expr.end){
+				std::cout<<"["<<it2->s<<"] ";
+				it2++;
+			}
+			std::cout<<")"<<std::endl;
 		}
-		if(it != tokens.end()) it++;
-		else break;
+		it++;
+		if(it == tokens.end()) break;
 	}
 }
