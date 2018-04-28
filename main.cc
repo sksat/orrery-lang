@@ -3,11 +3,52 @@
 #include <vector>
 #include <string>
 #include <string_view>
+#include <memory>
 #include "token.hpp"
 
-void print_tokens(const token::toklst_t &tokens);
+struct node_t {
+	using tokitr = token::toklst_t::const_iterator;
 
-void parse(const token::toklst_t &tokens, size_t pos=0);
+	tokitr begin, end;
+	std::vector<std::shared_ptr<node_t>> child;
+
+	virtual std::string str(size_t scope=0){
+		std::string s;
+		for(auto it=begin;it<end;it++){
+			s += it->s;
+			s += " ";
+		}
+		return s;
+	}
+};
+
+struct expr_t : node_t {
+	std::string str(size_t scope=0){
+		return node_t::str();
+	}
+};
+
+struct block_t : node_t {
+	node_t head;
+
+	std::string str(size_t scope=0){
+		std::string s;
+		for(auto i=0;i<scope;i++) s+="  ";
+		s += "block{";
+		s += "header: " + head.str();
+		s += "}";
+		s += "\n";
+		for(auto& c : child){
+			for(auto i=0;i<=scope;i++) s+="  ";
+			s += c->str(scope+1);
+			s += "\n";
+		}
+		return s;
+	}
+};
+
+void print_tokens(const token::toklst_t &tokens);
+void parse_block(block_t &parent);
 
 int main(int argc, char **argv){
 	std::ifstream file;
@@ -41,7 +82,11 @@ int main(int argc, char **argv){
 	token::tokenize(tokens, src);
 	print_tokens(tokens);
 
-	parse(tokens);
+	block_t global;
+	global.begin = tokens.cbegin();
+	global.end   = tokens.cend();
+	parse_block(global);
+	std::cout<<global.str();
 }
 
 void print_tokens(const token::toklst_t &tokens){
@@ -67,59 +112,29 @@ void print_tokens(const token::toklst_t &tokens){
 	std::cout<<std::endl;
 }
 
-struct node_t {
-	using tokitr = token::toklst_t::const_iterator;
-	std::vector<node_t> child;
-};
+void parse_block(block_t &parent){
+	auto it = parent.begin;
+	const auto end = parent.end;
 
-struct expr_t : node_t {
-	tokitr begin, end;
-};
+	std::cout<<"blkbegin: "<<it->s<<", blkend: "<<end->s<<std::endl;
 
-struct block_t : node_t {
-	struct header_t {
-		tokitr begin, end;
-	};
-	header_t head;
-
-	// ブロックの中身
-	tokitr begin, end;
-};
-
-void print_block(const block_t &blk){
-	std::cout<<"block:"<<std::endl;
-	std::cout<<"\theader: ";
-	auto& head = blk.head;
-	if(head.begin == head.end) std::cout<<"empty";
-	for(auto it=head.begin;it<head.end;it++)
-		std::cout<<"["<<it->s<<"] ";
-	std::cout<<std::endl;
-	std::cout<<"\tmain: ";
-	if(blk.begin == blk.end) std::cout<<"empty";
-	for(auto it=blk.begin;it<blk.end;it++)
-		std::cout<<"["<<it->s<<"] ";
-	std::cout<<std::endl;
-}
-
-void parse(const token::toklst_t &tokens, size_t pos){
-	auto read = tokens.begin() + pos;
-	auto it = read;
-
-	if(pos == 0) std::cout<<"parse:"<<std::endl;
+	if(it == end) return;
 
 	while(true){
 		if(it->s == "fn" || it->s == "if" || it->s == "for"){
-			block_t blk;
+			auto blk = std::make_shared<block_t>();
 			std::cout<<"statement "<<it->s<<":"<<std::endl;
 			it++;
-			blk.head.begin = it;
+			blk->head.begin = it;
 			while(true){
 				if(it->s == "{") break;
 				it++;
 			}
-			blk.head.end = it;
+			blk->head.end = it;
 			it++;
-			blk.begin = it;
+			blk->begin = it;
+
+			std::cout<<"block: "<<blk->str()<<std::endl;
 
 			size_t block_scope = 0;
 			while(true){
@@ -130,27 +145,29 @@ void parse(const token::toklst_t &tokens, size_t pos){
 				}
 				it++;
 			}
-			blk.end = it;
+			blk->end = it;
+			if(it == end) break;
+			it++;
 
-			print_block(blk);
+			parse_block(*(blk.get()));
+			parent.child.push_back(blk);
 		}else{
-			expr_t expr;
-			expr.begin = it;
+			auto expr = std::make_shared<expr_t>();
+			expr->begin = it;
+			std::cout<<"begin: "<<it->s<<std::endl;
 			while(true){
+				if(it == end) continue;
 				if(it->s == ";") break;
-				it++;
+				else it++;
 			}
-			expr.end = it;
-
-			auto it2 = expr.begin;
-			std::cout<<"expr(";
-			while(it2<expr.end){
-				std::cout<<"["<<it2->s<<"] ";
-				it2++;
-			}
-			std::cout<<")"<<std::endl;
+			expr->end = it;
+			std::cout<<"expr: "<<expr->str()<<std::endl;
+			if(it == end) break;
+			it++;
+			if(expr->begin == expr->end) continue;
+			std::cout<<"expr("<<expr->str()<<")"<<std::endl;
+			parent.child.push_back(expr);
 		}
-		it++;
-		if(it == tokens.end()) break;
+		if(it == parent.end || it == end) break;
 	}
 }
