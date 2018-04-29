@@ -68,6 +68,7 @@ struct block_t : node_t {
 
 void print_tokens(const token::toklst_t &tokens);
 void parse_block(block_t &parent);
+void parse_expr(expr_t &expr);
 
 int main(int argc, char **argv){
 	std::ifstream file;
@@ -142,8 +143,8 @@ void parse_block(block_t &parent){
 			auto blk = std::make_shared<block_t>();
 			std::cout<<"statement "<<it->s<<":"<<std::endl;
 			if(it->s == "fn") blk->type = block_t::Func;
-			if(it->s == "if") blk->type = block_t::If;
-			if(it->s == "for")blk->type = block_t::For;
+			else if(it->s == "if") blk->type = block_t::If;
+			else if(it->s == "for")blk->type = block_t::For;
 			it++;
 			blk->head.begin = it;
 			while(true){
@@ -181,8 +182,32 @@ void parse_block(block_t &parent){
 			if(it == end) break;
 			it++;
 			if(expr->begin == expr->end) continue;
+			parse_expr(*expr);
 			parent.child.push_back(expr);
 		}
 		if(it == parent.end || it == end) break;
+	}
+}
+
+void parse_expr(expr_t &expr){
+	if(expr.begin == expr.end) return;
+
+	auto it = expr.begin;
+
+	while(true){
+		if(it->s == "("){
+			auto sub = std::make_shared<expr_t>();
+			sub->begin = it;
+			while(true){
+				if(it->s == ")") break;
+				it++;
+			}
+			it++;
+			sub->end = it;
+			std::cout<<"sub: "<<sub->str()<<std::endl;
+			expr.child.push_back(sub);
+		}
+		if(it == expr.end) break;
+		it++;
 	}
 }
