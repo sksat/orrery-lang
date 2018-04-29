@@ -24,17 +24,36 @@ struct node_t {
 
 struct expr_t : node_t {
 	std::string str(size_t scope=0){
-		return node_t::str();
+		std::string s;
+		s += "expr(" + node_t::str() + ");";
+		return s;
 	}
 };
 
 struct block_t : node_t {
+	enum type_enum {
+		Unknown,
+		Func,
+		If,
+		For,
+	};
+
+	type_enum type;
+
 	node_t head;
 
 	std::string str(size_t scope=0){
 		std::string s;
 		for(auto i=0;i<scope;i++) s+="  ";
 		s += "block{";
+		s += "type:";
+		switch(type){
+			case Unknown:	s +="unknown";	break;
+			case Func:	s +="function";	break;
+			case If:	s +="if";	break;
+			case For:	s +="for";	break;
+		}
+		s += ", ";
 		s += "header: " + head.str();
 		s += "}";
 		s += "\n";
@@ -116,14 +135,15 @@ void parse_block(block_t &parent){
 	auto it = parent.begin;
 	const auto end = parent.end;
 
-	std::cout<<"blkbegin: "<<it->s<<", blkend: "<<end->s<<std::endl;
-
 	if(it == end) return;
 
 	while(true){
 		if(it->s == "fn" || it->s == "if" || it->s == "for"){
 			auto blk = std::make_shared<block_t>();
 			std::cout<<"statement "<<it->s<<":"<<std::endl;
+			if(it->s == "fn") blk->type = block_t::Func;
+			if(it->s == "if") blk->type = block_t::If;
+			if(it->s == "for")blk->type = block_t::For;
 			it++;
 			blk->head.begin = it;
 			while(true){
@@ -133,8 +153,6 @@ void parse_block(block_t &parent){
 			blk->head.end = it;
 			it++;
 			blk->begin = it;
-
-			std::cout<<"block: "<<blk->str()<<std::endl;
 
 			size_t block_scope = 0;
 			while(true){
@@ -154,18 +172,15 @@ void parse_block(block_t &parent){
 		}else{
 			auto expr = std::make_shared<expr_t>();
 			expr->begin = it;
-			std::cout<<"begin: "<<it->s<<std::endl;
 			while(true){
 				if(it == end) continue;
 				if(it->s == ";") break;
 				else it++;
 			}
 			expr->end = it;
-			std::cout<<"expr: "<<expr->str()<<std::endl;
 			if(it == end) break;
 			it++;
 			if(expr->begin == expr->end) continue;
-			std::cout<<"expr("<<expr->str()<<")"<<std::endl;
 			parent.child.push_back(expr);
 		}
 		if(it == parent.end || it == end) break;
