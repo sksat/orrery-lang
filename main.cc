@@ -25,7 +25,18 @@ struct node_t {
 struct expr_t : node_t {
 	std::string str(size_t scope=0){
 		std::string s;
-		s += "expr(" + node_t::str() + ");";
+		if(child.empty()){
+			s += begin->s;
+			return s;
+		}
+
+		s += "expr(";
+		for(auto& c : child){
+			s += "(";
+			s += c->str();
+			s += ") ";
+		}
+		s += ");";
 		return s;
 	}
 };
@@ -205,6 +216,12 @@ void parse_expr(expr_t &expr){
 			it++;
 			sub->end = it;
 			std::cout<<"sub: "<<sub->str()<<std::endl;
+			expr.child.push_back(sub);
+		}else{
+			auto sub = std::make_shared<expr_t>();
+			sub->begin = it;
+			sub->end   = it;
+			std::cout<<"sub2: "<<sub->str()<<std::endl;
 			expr.child.push_back(sub);
 		}
 		if(it == expr.end) break;
