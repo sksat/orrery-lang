@@ -7,7 +7,7 @@
 " 参考: http://vim-jp.org/vimdoc-ja/usr_44.html
 syn case match " 大文字・小文字を区別する
 
-syn keyword orreryKeyword import return true
+syn keyword orreryKeyword import fn if loop return true
 syn keyword orreryTodoComment TODO contained
 syn region orreryLineComment start=+//+ end=+$+ contains=orreryTodoComment
 syn region orreryMultiComment start=+/\*+ end=+\*/+
