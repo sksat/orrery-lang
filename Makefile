@@ -2,7 +2,7 @@ CXX	= clang++
 CXXFLAGS= -std=c++1z -g
 
 TARGET	= orrery
-OBJS	= main.o token.o
+OBJS	= main.o token.o parse.o
 
 RUNFLAGS= test/test.ory
 

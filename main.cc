@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include "token.hpp"
+#include "parse.hpp"
 
 int main(int argc, char **argv){
 	using namespace orrery;
@@ -51,4 +52,9 @@ int main(int argc, char **argv){
 			}
 		}
 	}
+
+	unit_t global;
+	global.begin	= tokens.begin();
+	global.end	= tokens.end();
+	parse(global);
 }
