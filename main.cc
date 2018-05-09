@@ -4,6 +4,7 @@
 #include "token.hpp"
 
 int main(int argc, char **argv){
+	using namespace orrery;
 	std::string src_str;
 
 	if(argc == 1){
@@ -28,14 +29,13 @@ int main(int argc, char **argv){
 		<< src_str
 		<< std::endl;
 
-	std::vector<token::token_t> tokens;
-	token::tokenize(tokens, src_str);
+	std::vector<token_t> tokens;
+	tokenize(tokens, src_str);
 
 	std::cout << "tokens:" << std::endl;
 	{
 		size_t scope = 0;
 		for(size_t i=0;i<tokens.size();i++){
-			using namespace token;
 			auto &t = tokens[i];
 			bool flg = false;
 
@@ -47,7 +47,7 @@ int main(int argc, char **argv){
 				if(t.t == type::BlkStart) scope++;
 				if(next.t == type::BlkEnd && scope) scope--;
 				std::cout<<std::endl;
-				for(size_t i=0;i<scope;i++) std::cout<<" ";
+				for(size_t i=0;i<scope;i++) std::cout<<"\t";
 			}
 		}
 	}

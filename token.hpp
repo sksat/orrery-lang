@@ -4,7 +4,7 @@
 #include <vector>
 #include <string_view>
 
-namespace token {
+namespace orrery {
 	enum class type {
 		Unknown,
 		String,

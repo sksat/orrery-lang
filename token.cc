@@ -1,7 +1,7 @@
 #include "token.hpp"
 #include <iostream>
 
-namespace token {
+namespace orrery {
 
 void skip_space(std::string_view &src){
 	size_t skip;
