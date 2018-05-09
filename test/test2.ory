@@ -1,0 +1,11 @@
+
+hoge();
+
+// comment
+
+func("文字列！");
+
+/*
+fuga();
+comment2
+*/

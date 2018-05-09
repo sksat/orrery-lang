@@ -84,8 +84,6 @@ token_t get_delimiter_token(std::string_view &src){
 	t.s = src.substr(0, siz);
 	src.remove_prefix(siz);
 
-	std::cout<<"delim: ["<<t.s<<"]"<<std::endl;
-
 	return t;
 }
 
@@ -119,13 +117,11 @@ token_t get_token(std::string_view &src){
 				if(siz==0) t = get_delimiter_token(src);
 				else{
 					t.s = src.substr(0, siz); // 直前まで
-					std::cout<< "unknown:["<<t.s<<"]"<<std::endl;
 					src.remove_prefix(siz);
 				}
 				return t;
 			default:
 				if(siz == src.size()){
-					std::cout<<"last:["<<src<<"]"<<std::endl;
 					t.s = src;
 					src.remove_prefix(src.size());
 					return t;
