@@ -32,10 +32,14 @@ bool skip_comment(std::string_view &src){
 token_t get_delimiter_token(std::string_view &src){
 	token_t t;
 	size_t siz;
+
+	t.t = type::Operator;
+
 	switch(src[0]){
 		// 文字列
 		case '\'':
 		case '\"':
+			t.t = type::String;
 			siz = src.find(src[0], 1);
 			if(siz == std::string_view::npos){ /*TODO: error*/ }
 			siz++;
@@ -70,11 +74,15 @@ token_t get_delimiter_token(std::string_view &src){
 			if(src[1] == '=') siz++;
 			break;
 		// 確実に1字で区切れるやつ
-		case '[': case ']':
-		case '{': case '}':
-		case '(': case ')':
-		case ',': case ';':
+		case '[': case ']':		goto one_char;
+		case '{': t.t = type::BlkStart;	goto one_char;
+		case '}': t.t = type::BlkEnd;	goto one_char;
+		case '(': t.t = type::SubStart;	goto one_char;
+		case ')': t.t = type::SubEnd;	goto one_char;
+		case ',': t.t = type::Delim;	goto one_char;
+		case ';': t.t = type::ExprEnd;
 		case '~': case '?':
+one_char:
 			siz = 1;
 			break;
 		default:

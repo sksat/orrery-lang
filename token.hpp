@@ -6,13 +6,22 @@
 
 namespace token {
 	enum class type {
-		string,
-		digit,
-		unknown,
+		Unknown,
+		String,
+		Digit,
+		SubStart,
+		SubEnd,
+		Delim,
+		ExprEnd,
+		BlkStart,
+		BlkEnd,
+		Operator,
 	};
 
 	struct token_t {
+		token_t() : t(type::Unknown) {}
 		std::string_view s;
+		type t;
 	};
 
 	token_t get_token(std::string_view &src);

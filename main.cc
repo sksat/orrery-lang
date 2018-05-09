@@ -31,7 +31,24 @@ int main(int argc, char **argv){
 	std::vector<token::token_t> tokens;
 	token::tokenize(tokens, src_str);
 
-	for(auto &t : tokens){
-		std::cout << "[" << t.s << "] ";
+	std::cout << "tokens:" << std::endl;
+	{
+		size_t scope = 0;
+		for(size_t i=0;i<tokens.size();i++){
+			using namespace token;
+			auto &t = tokens[i];
+			bool flg = false;
+
+			if(t.t == type::Operator)	std::cout << t.s << " ";
+			else				std::cout << "[" << t.s << "] ";
+
+			if(t.t==type::BlkStart || t.t==type::BlkEnd || t.t==type::ExprEnd){
+				const auto &next = tokens[i+1];
+				if(t.t == type::BlkStart) scope++;
+				if(next.t == type::BlkEnd && scope) scope--;
+				std::cout<<std::endl;
+				for(size_t i=0;i<scope;i++) std::cout<<" ";
+			}
+		}
 	}
 }
