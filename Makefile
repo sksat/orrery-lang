@@ -4,7 +4,7 @@ CXXFLAGS= -std=c++1z -g
 TARGET	= orrery
 OBJS	= main.o token.o parse.o
 
-RUNFLAGS= test/test.ory
+RUNFLAGS= test/expr.ory
 
 %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
