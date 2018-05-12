@@ -22,12 +22,10 @@ std::string unit2str(const unit_t &u){
 }
 
 size_t get_priority(const token_t &op){
-	const char c = op.s[0];
+	const auto s = op.s;
 	size_t p = 0;
-	switch(c){
-		case '+': return 1;
-		case '*': return 2;
-	}
+	if(s == "*" || s == "/") p=2;
+	else if(s == "+" || s == "-") p=1;
 	return p;
 }
 
@@ -49,8 +47,9 @@ void parse_expr(unit_t &unit){
 			}
 		}else if(it->t == type::Operator){
 			if(st.empty()) st.push(*it);
-			else if(get_priority(*it) > get_priority(st.top())) st.push(*it);
-			else{
+			else if(get_priority(*it) > get_priority(st.top())){
+				st.push(*it);
+			}else{
 				buf.push_back(st.top());
 				st.pop();
 				st.push(*it);
