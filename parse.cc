@@ -37,9 +37,17 @@ void parse_expr(unit_t &unit){
 	std::vector<token_t> buf;
 	std::stack<token_t> st;
 
+	// 逆ポーランド記法に変換する
 	for(auto it=unit.begin; it<unit.end; it++){
 		if(it->t == type::SubStart) st.push(*it);
-		else if(it->t == type::Operator){
+		else if(it->t == type::SubEnd){
+			while(true){
+				auto t = st.top();
+				st.pop();
+				if(t.t == type::SubStart) break;
+				buf.push_back(t);
+			}
+		}else if(it->t == type::Operator){
 			if(st.empty()) st.push(*it);
 			else if(get_priority(*it) > get_priority(st.top())) st.push(*it);
 			else{
@@ -47,9 +55,6 @@ void parse_expr(unit_t &unit){
 				st.pop();
 				st.push(*it);
 			}
-		}
-		else if(it->t == type::SubEnd){
-			break;
 		}else buf.push_back(*it);
 	}
 	while(!st.empty()){
